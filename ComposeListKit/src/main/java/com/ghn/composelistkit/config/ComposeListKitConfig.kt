@@ -1,110 +1,224 @@
 package com.ghn.composelistkit.config
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * @author 浩楠
- *
- * @date 2025/5/1-12:55
- *
- *      _              _           _     _   ____  _             _ _
- *     / \   _ __   __| |_ __ ___ (_) __| | / ___|| |_ _   _  __| (_) ___
- *    / _ \ | '_ \ / _` | '__/ _ \| |/ _` | \___ \| __| | | |/ _` | |/ _ \
- *   / ___ \| | | | (_| | | | (_) | | (_| |  ___) | |_| |_| | (_| | | (_) |
- *  /_/   \_\_| |_|\__,_|_|  \___/|_|\__,_| |____/ \__|\__,_|\__,_|_|\___/
- * @Description: TODO
- */
 data class ComposeListKitConfig<T>(
-    // 列表数据
-    var items: List<T> = emptyList(),
+    val data: ListDataConfig<T> = ListDataConfig(),
+    val pageState: PageStateConfig = PageStateConfig(),
+    val refresh: RefreshConfig = RefreshConfig(),
+    val loadMore: LoadMoreConfig = LoadMoreConfig(),
+    val mode: ComposeListKitMode<T> = ComposeListKitMode.Plain(),
+    val listState: LazyListState? = null
+)
 
-    // item 唯一 key，用于 Compose 列表 diff（如 LazyColumn 的 key）
-    var keySelector: ((T) -> Any)? = null,
+data class ListDataConfig<T>(
+    val items: List<T> = emptyList(),
+    val keySelector: ((T) -> Any)? = null,
+    val contentTypeSelector: ((T) -> Any?)? = null,
+    val modifier: Modifier = Modifier,
+    val layout: ListLayoutConfig = ListLayoutConfig(),
+    val divider: DividerConfig = DividerConfig(),
+    val itemContent: @Composable (T) -> Unit = { _ -> }
+)
 
-    // 是否正在刷新
-    var isRefreshing: Boolean = false,
+data class ListLayoutConfig(
+    val style: ListLayoutStyle = ListLayoutStyle.Vertical,
+    val contentPadding: PaddingValues = PaddingValues(0.dp),
+    val mainAxisSpacing: Dp = 0.dp,
+    val crossAxisSpacing: Dp = 0.dp,
+    val reverseLayout: Boolean = false
+)
 
-    // 下拉刷新回调
-    var onRefresh: (() -> Unit)? = null,
+sealed interface ListLayoutStyle {
+    data object Vertical : ListLayoutStyle
+    data object Horizontal : ListLayoutStyle
+    data class Grid(val columns: Int = 2) : ListLayoutStyle
+    data class Staggered(val columns: Int = 2) : ListLayoutStyle
+    data class Flow(val maxItemsInEachRow: Int = 3) : ListLayoutStyle
+}
 
-    // 是否正在加载更多
-    var isLoadingMore: Boolean = false,
+data class DividerConfig(
+    val enabled: Boolean = false,
+    val thickness: Dp = 0.5.dp,
+    val color: Color = Color.Unspecified,
+    val startIndent: Dp = 0.dp,
+    val endIndent: Dp = 0.dp
+)
 
-    // 上拉加载更多回调
-    var onLoadMore: (() -> Unit)? = null,
+data class PageStateConfig(
+    val isLoadingFirstPage: Boolean = false,
+    val isError: Boolean = false,
+    val onRetry: (() -> Unit)? = null,
+    val loadingContent: (@Composable () -> Unit)? = null,
+    val errorContent: (@Composable () -> Unit)? = null,
+    val emptyContent: (@Composable () -> Unit)? = null
+)
 
+data class RefreshConfig(
+    val isRefreshing: Boolean = false,
+    val onRefresh: (() -> Unit)? = null,
+    val indicatorContent: (@Composable (Boolean) -> Unit)? = null
+)
 
-    // 是否正在加载第一页（用于展示 loading 状态页）
-    var isLoadingFirstPage: Boolean = false,
+data class LoadMoreConfig(
+    val isLoadingMore: Boolean = false,
+    val hasMore: Boolean = true,
+    val isLoadMoreError: Boolean = false,
+    val prefetchDistance: Int = 0,
+    val onLoadMore: (() -> Unit)? = null,
+    val onRetryLoadMore: (() -> Unit)? = null,
+    val loadingMoreContent: (@Composable () -> Unit)? = null,
+    val loadMoreErrorContent: (@Composable ((() -> Unit)?) -> Unit)? = null,
+    val noMoreContent: (@Composable () -> Unit)? = null,
+    val style: LoadMoreStyle = LoadMoreStyle()
+)
 
-    // 是否处于错误状态（用于展示错误状态页）
-    var isError: Boolean = false,
+data class LoadMoreStyle(
+    val loadingIndicatorColor: Color? = null,
+    val loadingText: String? = null,
+    val loadingTextColor: Color? = null,
+    val errorText: String = "加载失败",
+    val errorRetryText: String = "加载失败，点击重试",
+    val errorTextColor: Color? = null,
+    val noMoreText: String = "没有更多了",
+    val noMoreTextColor: Color? = null
+)
 
-    // 点击错误页重试的回调
-    var onRetry: (() -> Unit)? = null,
+data class SwipeAction<T>(
+    val key: String,
+    val label: String,
+    val onAction: (T) -> Unit,
+    val onUndo: ((T) -> Unit)? = null,
+    val undoLabel: String = "撤销",
+    val undoMessage: ((T) -> String)? = null,
+    val undoTimeoutMillis: Long = 3200L,
+    val containerColor: Color? = null,
+    val contentColor: Color? = null,
+    val content: (@Composable () -> Unit)? = null,
+    val requiresConfirm: Boolean = false,
+    val confirmLabel: String = "确认",
+    val confirmContent: (@Composable () -> Unit)? = null,
+    val confirmTimeoutMillis: Long = 1800L,
+    val enableHapticFeedback: Boolean = false
+)
 
-    // 数据为空时的 UI（Empty Page）
-    var emptyContent: (@Composable () -> Unit)? = null,
+data class BatchSelectionAction<T>(
+    val key: String,
+    val label: String,
+    val onAction: (List<T>) -> Unit,
+    val clearSelectionAfterAction: Boolean = true
+)
 
-    // 加载失败时的 UI（Error Page）
-    var errorContent: (@Composable () -> Unit)? = null,
+data class MultiSelectItemStyle(
+    val selectedContainerColor: Color? = null,
+    val unselectedContainerColor: Color? = null,
+    val selectedContainerAlpha: Float = 0.30f,
+    val unselectedContainerAlpha: Float = 1f,
+    val cornerRadius: Dp = 12.dp,
+    val rowOuterVerticalPadding: Dp = 4.dp,
+    val rowInnerHorizontalPadding: Dp = 8.dp,
+    val rowInnerVerticalPadding: Dp = 4.dp
+)
 
-    // 正在加载时的 UI（Loading Page）
-    var loadingContent: (@Composable () -> Unit)? = null,
+data class MultiSelectBarState<T>(
+    val selectedItems: List<T>,
+    val selectedCount: Int,
+    val selectionMode: SelectionMode,
+    val clearSelection: () -> Unit,
+    val selectAll: (() -> Unit)?,
+    val invertSelection: (() -> Unit)?,
+    val executeAction: (BatchSelectionAction<T>) -> Unit
+)
 
-    // 列表头部 UI
-    var headerContent: (@Composable () -> Unit)? = null,
+enum class SelectionMode {
+    Single,
+    Multi
+}
 
-    // 列表尾部 UI
-    var footerContent: (@Composable () -> Unit)? = null,
+sealed interface ComposeListKitMode<T> {
+    data class Plain<T>(
+        val header: (@Composable () -> Unit)? = null,
+        val footer: (@Composable () -> Unit)? = null
+    ) : ComposeListKitMode<T>
 
-    // Compose Modifier（列表外层修饰符）
-    var modifier: Modifier = Modifier,
+    data class Sectioned<T>(
+        val groups: List<GroupedItems<T>> = emptyList(),
+        val isSticky: Boolean = true,
+        val headerContent: (@Composable (String) -> Unit)? = null
+    ) : ComposeListKitMode<T>
 
-    // 单个 item 的内容渲染函数
-    var itemContent: @Composable (T) -> Unit = {},
+    data class SectionedSwipe<T>(
+        val groups: List<GroupedItems<T>> = emptyList(),
+        val isSticky: Boolean = true,
+        val headerContent: (@Composable (String) -> Unit)? = null,
+        val startActions: List<SwipeAction<T>> = emptyList(),
+        val endActions: List<SwipeAction<T>> = emptyList(),
+        val actionSlotWidth: Dp = 92.dp,
+        val openThresholdFraction: Float = 0.35f,
+        val enableFullSwipeAction: Boolean = false,
+        val fullSwipeTriggerFraction: Float = 0.86f,
+        val canSwipe: ((T) -> Boolean)? = null,
+        val contentPadding: PaddingValues = PaddingValues(0.dp),
+        val backgroundContent: (@Composable (T, List<SwipeAction<T>>) -> Unit)? = null,
+        val enableGroupCollapse: Boolean = false,
+        val initiallyCollapsedGroupTitles: Set<String> = emptySet(),
+        val headerStateContent: (@Composable (String, Boolean) -> Unit)? = null
+    ) : ComposeListKitMode<T>
 
-    // 分组列表的数据源（每个分组是一个 group item）
-    var groupedItems: List<Any>? = null,
+    data class Swipe<T>(
+        val startActions: List<SwipeAction<T>> = emptyList(),
+        val endActions: List<SwipeAction<T>> = emptyList(),
+        val actionSlotWidth: Dp = 92.dp,
+        val openThresholdFraction: Float = 0.35f,
+        val enableFullSwipeAction: Boolean = false,
+        val fullSwipeTriggerFraction: Float = 0.86f,
+        val canSwipe: ((T) -> Boolean)? = null,
+        val contentPadding: PaddingValues = PaddingValues(0.dp),
+        val backgroundContent: (@Composable (T, List<SwipeAction<T>>) -> Unit)? = null
+    ) : ComposeListKitMode<T>
 
-    // 从 group item 中提取分组标题
-    var groupTitleSelector: ((Any) -> String)? = null,
+    data class Drag<T>(
+        val useLongPress: Boolean = false,
+        val enableHighlight: Boolean = true,
+        val dragHandle: (@Composable () -> Unit)? = null,
+        val itemContent: (@Composable (T, Boolean) -> Unit)? = null,
+        val onMove: ((Int, Int) -> Unit)? = null,
+        val onReordered: ((List<T>) -> Unit)? = null
+    ) : ComposeListKitMode<T>
 
-    // 从 group item 中提取子项列表
-    var groupItemsSelector: ((Any) -> List<T>)? = null,
+    data class CommentThread<T>(
+        val childrenSelector: (T) -> List<T>,
+        val maxDepth: Int = 3,
+        val initialExpandedDepth: Int = 2,
+        val indentPerLevel: Dp = 16.dp,
+        val contentPadding: PaddingValues = PaddingValues(0.dp),
+        val itemContent: (@Composable (T, Int, Boolean, Boolean, () -> Unit) -> Unit)? = null
+    ) : ComposeListKitMode<T>
 
-    // 分组 header 的渲染 UI
-    var groupHeaderContent: (@Composable (String) -> Unit)? = null,
+    data class MultiSelect<T>(
+        val actions: List<BatchSelectionAction<T>> = emptyList(),
+        val maxSelectionCount: Int = Int.MAX_VALUE,
+        val selectionMode: SelectionMode = SelectionMode.Multi,
+        val showSelectionIndicator: Boolean = true,
+        val showSelectionBar: Boolean = true,
+        val enableSelectAllAction: Boolean = false,
+        val enableInvertSelectionAction: Boolean = false,
+        val itemStyle: MultiSelectItemStyle = MultiSelectItemStyle(),
+        val indicatorContent: (@Composable (Boolean, SelectionMode, () -> Unit) -> Unit)? = null,
+        val selectionBarContent: (@Composable (MultiSelectBarState<T>) -> Unit)? = null,
+        val contentPadding: PaddingValues = PaddingValues(0.dp),
+        val itemContent: (@Composable (T, Boolean) -> Unit)? = null,
+        val onSelectionChanged: ((List<T>) -> Unit)? = null
+    ) : ComposeListKitMode<T>
+}
 
-    // 是否启用分组吸顶效果
-    var isStickyGroup: Boolean = true,
-
-    // 拖拽是否使用长按触发
-    var useLongPress: Boolean = false,
-
-    // 拖拽时是否高亮当前 item
-    var enableHighlight: Boolean = true,
-
-    // 拖拽手柄组件（显示在 item 中）
-    var dragHandle: (@Composable () -> Unit)? = null,
-
-    // 拖拽时 item 的渲染 UI（可带 isDragging 状态）
-    var dragItemContent: (@Composable (item: T, isDragging: Boolean) -> Unit)? = null,
-
-    // 是否启用侧滑删除
-    var onSwipeDelete: ((T) -> Unit)? = null,
-
-    // 侧滑背景自定义内容（默认删除按钮）
-    var swipeBackground: (@Composable (T) -> Unit)? = null,
-
-    // 内容边距（用于背景与 itemContent 同步）
-    var swipeContentPadding: PaddingValues = PaddingValues(0.dp),
-
-    var listState: LazyListState? = null
-
+data class GroupedItems<T>(
+    val title: String,
+    val items: List<T>
 )

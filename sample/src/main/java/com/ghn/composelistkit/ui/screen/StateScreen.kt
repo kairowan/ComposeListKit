@@ -96,68 +96,96 @@ fun StateScreen() {
                 Text(text = "正常数据")
             }
         }
-        ComposeListKit<String> {
-            items(items)
-            modifier(Modifier.weight(1f))
+        ComposeListKit {
+            data {
+                list(items = items, modifier = Modifier.weight(1f))
+                item { item -> StateListItem(item) }
+            }
 
-            isRefreshing(isRefreshing)
-            onRefresh {
-                isRefreshing = true
-                coroutineScope.launch {
-                    // 模拟刷新逻辑
-                    isRefreshing = false
+            refresh {
+                bind(isRefreshing = isRefreshing) {
+                    isRefreshing = true
+                    coroutineScope.launch {
+                        isRefreshing = false
+                    }
                 }
             }
 
-            isLoadingFirstPage(isLoadingFirstPage)
-            isError(isError)
-            onRetry {
-                isError = false
-                isLoadingFirstPage = true
-                coroutineScope.launch {
-                    // 模拟重试加载
-                    isLoadingFirstPage = false
-                }
-            }
-
-            isLoadingMore(isLoadingMore)
-            onLoadMore {
-                isLoadingMore = true
-                coroutineScope.launch {
-                    delay(1500)
-                    val next = (items.size + 1)..(items.size + 20)
-                    items.addAll(next.map { "More Item $it" })
-                    isLoadingMore = false
-                }
-            }
-
-            emptyContent {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "这里空空如也～")
-                }
-            }
-
-            errorContent {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "加载失败，点我重试")
-                }
-            }
-
-            loadingContent {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            itemContent { item ->
-                Text(
-                    text = item,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
+            state {
+                loading(isLoadingFirstPage)
+                error(
+                    isError = isError,
+                    onRetry = {
+                        isError = false
+                        isLoadingFirstPage = true
+                        coroutineScope.launch {
+                            isLoadingFirstPage = false
+                        }
+                    }
                 )
+                slots(
+                    empty = { StateEmptyView() },
+                    loading = { StateLoadingView() },
+                    error = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Button(onClick = {
+                                isError = false
+                                isLoadingFirstPage = true
+                                coroutineScope.launch {
+                                    isLoadingFirstPage = false
+                                    items.addAll((1..20).map { "重试 Item $it" })
+                                }
+                            }) {
+                                Text(text = "加载失败，点击重试")
+                            }
+                        }
+                    }
+                )
+            }
+
+            paging {
+                bind(
+                    isLoadingMore = isLoadingMore,
+                    prefetchDistance = 3
+                ) {
+                    isLoadingMore = true
+                    coroutineScope.launch {
+                        delay(1500)
+                        val next = (items.size + 1)..(items.size + 20)
+                        items.addAll(next.map { "More Item $it" })
+                        isLoadingMore = false
+                    }
+                }
             }
         }
     }
 }
 
+@Composable
+private fun StateListItem(item: String) {
+    Text(
+        text = item,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    )
+}
+
+@Composable
+private fun StateEmptyView() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = "这里空空如也～")
+    }
+}
+
+@Composable
+private fun StateLoadingView() {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator()
+    }
+}

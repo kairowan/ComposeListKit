@@ -28,7 +28,7 @@ fun StateWrapper(
     itemsEmpty: Boolean,
     onRetry: (() -> Unit)? = null,
     loadingContent: (@Composable () -> Unit)? = null,
-    errorContent: (@Composable (() -> Unit))? = null,
+    errorContent: (@Composable () -> Unit)? = null,
     emptyContent: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
@@ -67,4 +67,3 @@ fun StateWrapper(
         }
     }
 }
-

@@ -27,15 +27,19 @@ fun AutoNavListScreen(
     titles: List<String>
 ) {
     ComposeListKit<String> {
-        items(titles)
-        itemContent { title ->
-            Text(
-                text = title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { navController.navigate(title) }
-                    .padding(16.dp)
-            )
+        data {
+            list(items = titles)
+            item { title ->
+                Text(
+                    text = title,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            navController.navigate(title)
+                        }
+                        .padding(16.dp)
+                )
+            }
         }
     }
 }

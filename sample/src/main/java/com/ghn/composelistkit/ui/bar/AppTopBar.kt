@@ -1,14 +1,10 @@
 package com.ghn.composelistkit.ui.bar
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.ghn.composelistkit.ui.nav.RouteRegistry
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 
 /**
  * @author 浩楠
@@ -25,16 +21,17 @@ import androidx.compose.ui.graphics.Color
 @Composable
 fun AppTopBar(
     navController: NavHostController,
-    startRoute: String = "ui/list"
+    startRoute: String = "ui/list",
+    homeTitle: String = "ComposeListKit"
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
 
-    if (currentRoute != null && currentRoute != startRoute) {
-        val title = RouteRegistry.routeTitleMap[currentRoute] ?: "返回"
-        TopBar(
-            title = title,
-            onBackClick = { navController.popBackStack() }
-        )
-    }
+    val isHome = currentRoute == null || currentRoute == startRoute
+    val title = if (isHome) homeTitle else (RouteRegistry.routeTitleMap[currentRoute] ?: homeTitle)
+
+    TopBar(
+        title = title,
+        onBackClick = if (isHome) null else ({ navController.popBackStack() })
+    )
 }

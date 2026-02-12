@@ -15,7 +15,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ghn.composelistkit.ComposeListKit
-import com.ghn.composelistkit.wrapper.StickySectionWrapper
 
 /**
  * @author 浩楠
@@ -120,37 +119,44 @@ fun rememberSampleGroups(): List<Category> {
 @Composable
 fun StickySectionScreen() {
     val groups = rememberSampleGroups()
-    ComposeListKit<Item> {
-        groupedItems(
-            groups = groups,
-            groupTitleSelector = { it.groupName },
-            groupItemsSelector = { it.items }
-        )
-        groupHeaderContent { title ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(12.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text(
-                    text = title,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.DarkGray
-                )
-            }
-        }
-        itemContent { item ->
-            Text(
-                text = item.name,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                fontSize = 15.sp
+    ComposeListKit {
+        mode {
+            sectioned(
+                groups = groups,
+                groupTitleSelector = { it.groupName },
+                groupItemsSelector = { it.items },
+                groupHeaderContent = { title -> StickyGroupHeader(title) },
+                itemContent = { item -> StickySectionItem(item) }
             )
         }
     }
 }
 
+@Composable
+private fun StickyGroupHeader(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(12.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Text(
+            text = title,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp,
+            color = Color.DarkGray
+        )
+    }
+}
+
+@Composable
+private fun StickySectionItem(item: Item) {
+    Text(
+        text = item.name,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        fontSize = 15.sp
+    )
+}

@@ -1,10 +1,11 @@
 package com.ghn.composelistkit.wrapper
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 /**
  * @author 浩楠
@@ -19,18 +20,36 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
  * @Description: TODO
  */
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun RefreshWrapper(
     isRefreshing: Boolean,
     onRefresh: (() -> Unit)? = null,
+    indicatorContent: (@Composable (Boolean) -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     if (onRefresh != null) {
-        SwipeRefresh(
-            state = rememberSwipeRefreshState(isRefreshing),
-            onRefresh = onRefresh,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            content()
+        val pullToRefreshState = rememberPullToRefreshState()
+        if (indicatorContent != null) {
+            PullToRefreshBox(
+                modifier = Modifier.fillMaxSize(),
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                indicator = {
+                    indicatorContent(isRefreshing)
+                }
+            ) {
+                content()
+            }
+        } else {
+            PullToRefreshBox(
+                modifier = Modifier.fillMaxSize(),
+                state = pullToRefreshState,
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh
+            ) {
+                content()
+            }
         }
     } else {
         content()
