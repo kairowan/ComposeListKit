@@ -5,7 +5,7 @@ plugins {
     id("maven-publish")
 }
 group = "com.github.Gao-hao-nan"
-version = "1.0.0-beta01"
+version = "1.0.1"
 android {
     namespace = "com.ghn.composelistkit"
     compileSdk = 35

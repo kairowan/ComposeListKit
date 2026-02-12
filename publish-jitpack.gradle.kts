@@ -5,7 +5,7 @@ afterEvaluate {
                 from(components["release"])
                 groupId = "com.github.Gao-hao-nan"
                 artifactId = "ComposeListKit"
-                version = "1.0.0-beta01"
+                version = project.version.toString()
             }
         }
     }
