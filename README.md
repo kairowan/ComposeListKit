@@ -21,11 +21,33 @@
 
 ## 接入
 
+先在项目仓库中添加 JitPack：
+
 ```kotlin
-dependencies {
-    implementation(project(":ComposeListKit"))
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven(url = "https://jitpack.io")
+    }
 }
 ```
+
+然后添加依赖：
+
+```kotlin
+dependencies {
+    implementation("com.github.kairowan:ComposeListKit:Tag")
+}
+```
+
+```groovy
+dependencies {
+    implementation 'com.github.kairowan:ComposeListKit:Tag'
+}
+```
+
+`Tag` 请替换为具体版本号（例如：`v1.0.1`）。
 
 ## DSL 结构
 
