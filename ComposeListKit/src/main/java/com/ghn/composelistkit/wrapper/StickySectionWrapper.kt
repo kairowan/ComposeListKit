@@ -1,19 +1,12 @@
 package com.ghn.composelistkit.wrapper
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import kotlin.hashCode
+import com.ghn.composelistkit.config.GroupedItems
 
 /**
  * @author 浩楠
@@ -29,60 +22,51 @@ import kotlin.hashCode
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun <T, G> StickySectionWrapper(
-    groups: List<G>,
+fun <T> StickySectionWrapper(
+    groups: List<GroupedItems<T>>,
     listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
     isSticky: Boolean = true,
-    groupTitleSelector: (G) -> String,
-    groupItemsSelector: (G) -> List<T>,
     itemKey: ((T) -> Any)? = null,
-    isLoadingMore: Boolean = false,
-    loadMoreContent: (@Composable () -> Unit)? = null,
+    itemContentType: ((T) -> Any?)? = null,
+    loadMoreFooterState: LoadMoreFooterState = LoadMoreFooterState.Idle,
+    onRetryLoadMore: (() -> Unit)? = null,
+    loadingMoreContent: (@Composable () -> Unit)? = null,
+    loadMoreErrorContent: (@Composable ((() -> Unit)?) -> Unit)? = null,
+    noMoreContent: (@Composable () -> Unit)? = null,
     groupHeaderContent: @Composable (String) -> Unit,
     itemContent: @Composable (T) -> Unit
 ) {
-    LazyListContent<G>(
+    LazyListContent<T>(
         listState = listState,
         modifier = modifier,
+        keySelector = itemKey,
+        contentTypeSelector = itemContentType,
+        loadMoreFooterState = loadMoreFooterState,
+        onRetryLoadMore = onRetryLoadMore,
+        loadingMoreContent = loadingMoreContent,
+        loadMoreErrorContent = loadMoreErrorContent,
+        noMoreContent = noMoreContent,
         contentBuilder = {
             groups.forEach { group ->
-                val title = groupTitleSelector(group)
-                val items = groupItemsSelector(group)
-
                 if (isSticky) {
-                    stickyHeader(key = "sticky_$title") {
-                        groupHeaderContent(title)
+                    stickyHeader(key = "sticky_${group.title}") {
+                        groupHeaderContent(group.title)
                     }
                 } else {
-                    item(key = "title_$title") {
-                        groupHeaderContent(title)
+                    item(key = "title_${group.title}") {
+                        groupHeaderContent(group.title)
                     }
                 }
 
                 this.items(
-                    items = items,
-                    key = itemKey ?: { it.hashCode() }
+                    items = group.items,
+                    key = itemKey,
+                    contentType = { item -> itemContentType?.invoke(item) }
                 ) { item ->
                     itemContent(item)
-                }
-            }
-
-            if (isLoadingMore) {
-                item {
-                    (loadMoreContent ?: {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
-                    })()
                 }
             }
         }
     )
 }
-

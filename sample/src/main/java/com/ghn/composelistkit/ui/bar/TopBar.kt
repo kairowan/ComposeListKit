@@ -1,7 +1,7 @@
 package com.ghn.composelistkit.ui.bar
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,7 +27,7 @@ import androidx.compose.ui.graphics.Color
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(title: String, onBackClick: () -> Unit) {
+fun TopBar(title: String, onBackClick: (() -> Unit)? = null) {
     val colors = TopAppBarDefaults.topAppBarColors(
         titleContentColor = Color.White,
         navigationIconContentColor = Color.White,
@@ -36,8 +36,10 @@ fun TopBar(title: String, onBackClick: () -> Unit) {
     TopAppBar(
         title = { Text(title) },
         navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "返回")
+            if (onBackClick != null) {
+                IconButton(onClick = onBackClick) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                }
             }
         },
         colors = colors,

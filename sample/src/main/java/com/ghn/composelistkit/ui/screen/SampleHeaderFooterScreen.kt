@@ -60,39 +60,52 @@ fun SampleHeaderFooterScreen() {
                 Text(text = "添加到尾部")
             }
         }
-        ComposeListKit<String> {
-            items(items)
-            modifier(Modifier.weight(1f))
-            header {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "我是 Header 区域", style = MaterialTheme.typography.titleMedium)
-                }
+        ComposeListKit {
+            data {
+                list(items = items, modifier = Modifier.weight(1f))
+                item { item -> HeaderFooterItem(item) }
             }
-            footer {
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "我是 Footer 区域", style = MaterialTheme.typography.titleMedium)
+            mode {
+                plain {
+                    header { HeaderSlot() }
+                    footer { FooterSlot() }
                 }
-            }
-
-            itemContent { item ->
-                Text(
-                    text = item,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
             }
         }
 
     }
+}
+
+@Composable
+private fun HeaderSlot() {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "我是 Header 区域", style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun FooterSlot() {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(text = "我是 Footer 区域", style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Composable
+private fun HeaderFooterItem(item: String) {
+    Text(
+        text = item,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    )
 }

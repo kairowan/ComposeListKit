@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.ghn.composelistkit"
+    namespace = "com.ghn.composelistkit.sample"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.ghn.composelistkit"
+        applicationId = "com.ghn.composelistkit.sample"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -56,6 +56,6 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation(libs.androidx.navigation.compose)
 
 }

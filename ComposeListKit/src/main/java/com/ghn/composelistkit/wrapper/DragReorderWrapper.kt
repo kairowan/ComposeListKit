@@ -1,6 +1,5 @@
 package com.ghn.composelistkit.wrapper
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
@@ -42,18 +41,30 @@ fun <T> DragReorderWrapper(
     items: SnapshotStateList<T>,
     listState: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
+    loadMoreFooterState: LoadMoreFooterState = LoadMoreFooterState.Idle,
+    onRetryLoadMore: (() -> Unit)? = null,
+    loadingMoreContent: (@Composable () -> Unit)? = null,
+    loadMoreErrorContent: (@Composable ((() -> Unit)?) -> Unit)? = null,
+    noMoreContent: (@Composable () -> Unit)? = null,
     enableHighlight: Boolean = true,
     useLongPress: Boolean = false,
     dragHandle: (@Composable () -> Unit)? = null,
     itemKey: ((T) -> Any)? = null,
+    itemContentType: ((T) -> Any?)? = null,
+    onMove: ((Int, Int) -> Unit)? = null,
+    onItemsReordered: ((List<T>) -> Unit)? = null,
     itemContent: @Composable (item: T, isDragging: Boolean) -> Unit
 ) {
     val reorderState = rememberReorderableLazyListState(
         listState = listState,
         onMove = { from, to ->
-            if (from.index != to.index) {
-                items.move(from.index, to.index)
-            }
+            applyMoveAndNotify(
+                items = items,
+                fromIndex = from.index,
+                toIndex = to.index,
+                onMove = onMove,
+                onItemsReordered = onItemsReordered
+            )
         }
     )
 
@@ -61,6 +72,11 @@ fun <T> DragReorderWrapper(
 
     LazyListContent<T>(
         listState = reorderState.listState,
+        loadMoreFooterState = loadMoreFooterState,
+        onRetryLoadMore = onRetryLoadMore,
+        loadingMoreContent = loadingMoreContent,
+        loadMoreErrorContent = loadMoreErrorContent,
+        noMoreContent = noMoreContent,
         modifier = modifier
             .reorderable(reorderState)
             .then(
@@ -70,15 +86,15 @@ fun <T> DragReorderWrapper(
                     Modifier.detectReorder(reorderState)
             ),
         contentBuilder = {
-            itemsIndexed(items, key = { _, item -> itemKey?.invoke(item) ?: item.hashCode() }) { index, item ->
+            itemsIndexed(
+                items = items,
+                key = { _, item -> itemKey?.invoke(item) ?: item.hashCode() },
+                contentType = { _, item -> itemContentType?.invoke(item) }
+            ) { index, item ->
                 val isDragging = index == draggedIndex
                 val scale by animateFloatAsState(
                     targetValue = if (isDragging && enableHighlight) 1.03f else 1f,
                     label = "drag_scale_anim"
-                )
-                val elevation by animateDpAsState(
-                    targetValue = if (isDragging && enableHighlight) 12.dp else 0.dp,
-                    label = "drag_elevation_anim"
                 )
 
                 ReorderableItem(reorderState, index) {
@@ -89,10 +105,9 @@ fun <T> DragReorderWrapper(
                                 if (enableHighlight) {
                                     this.scaleX = scale
                                     this.scaleY = scale
-//                                    this.shadowElevation = elevation.toPx()
                                 }
                             }
-                            .animateItemPlacement()
+                            .animateItem()
                             .padding(8.dp)
                     ) {
                         dragHandle?.let {
@@ -112,11 +127,24 @@ fun <T> DragReorderWrapper(
     )
 }
 
-fun <T> MutableList<T>.move(fromIndex: Int, toIndex: Int) {
-    if (fromIndex == toIndex || fromIndex !in indices || toIndex !in 0..size) return
-    val item = removeAt(fromIndex)
-    add(toIndex, item)
+internal fun <T> applyMoveAndNotify(
+    items: MutableList<T>,
+    fromIndex: Int,
+    toIndex: Int,
+    onMove: ((Int, Int) -> Unit)? = null,
+    onItemsReordered: ((List<T>) -> Unit)? = null
+) {
+    if (fromIndex == toIndex) return
+    val moved = items.move(fromIndex, toIndex)
+    if (!moved) return
+    onMove?.invoke(fromIndex, toIndex)
+    onItemsReordered?.invoke(items.toList())
 }
 
-
-
+fun <T> MutableList<T>.move(fromIndex: Int, toIndex: Int): Boolean {
+    if (fromIndex == toIndex || fromIndex !in indices || toIndex !in 0..size) return false
+    val item = removeAt(fromIndex)
+    val targetIndex = if (toIndex > fromIndex) toIndex - 1 else toIndex
+    add(targetIndex.coerceIn(0, size), item)
+    return true
+}

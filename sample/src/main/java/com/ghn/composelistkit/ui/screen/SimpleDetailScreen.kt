@@ -29,17 +29,20 @@ fun SimpleDetailScreen() {
     LaunchedEffect(Unit) {
         items.addAll(1..20)
     }
-    ComposeListKit<Int> {
-        items(items)
-        itemContent { item ->
-            Text(
-                text = "Item $item",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
+    ComposeListKit {
+        data {
+            list(items = items)
+            item { item -> SimpleItem(item) }
         }
     }
 }
 
-
+@Composable
+private fun SimpleItem(item: Int) {
+    Text(
+        text = "Item $item",
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    )
+}

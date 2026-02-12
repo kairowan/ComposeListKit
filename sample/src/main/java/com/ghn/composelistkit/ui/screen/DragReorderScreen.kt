@@ -2,7 +2,6 @@ package com.ghn.composelistkit.ui.screen
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,12 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.ghn.composelistkit.ComposeListKit
-import com.ghn.composelistkit.wrapper.DragReorderWrapper
 
 
 /**
@@ -37,32 +34,44 @@ import com.ghn.composelistkit.wrapper.DragReorderWrapper
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DragReorderScreen() {
-    val list = remember {
+    val items = remember {
         mutableStateListOf(
             "Kotlin", "Java", "Goland", "C", "C++"
         )
     }
-    ComposeListKit<String> {
-        items(list)
-        useLongPress(true)
-        dragHandle {
-            Icon(
-                imageVector = Icons.Default.Menu,
-                contentDescription = "Drag",
-                modifier = Modifier.padding(end = 8.dp)
-            )
+    ComposeListKit {
+        data {
+            items(items)
         }
-        dragItemContent { item, _ ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .background(Color.Black, shape = RoundedCornerShape(18.dp))
-                    .padding(horizontal = 5.dp, vertical = 4.dp)
-            ) {
-                Text(text = item, color = Color.White)
-            }
+        mode {
+            dragReorder(
+                useLongPress = true,
+                dragHandle = {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Drag",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                },
+                itemContent = { item, isDragging -> DragItemCard(item, isDragging) }
+            )
         }
     }
 
+}
+
+@Composable
+private fun DragItemCard(item: String, isDragging: Boolean) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .background(
+                color = if (isDragging) Color(0xFF1F2937) else Color.Black,
+                shape = RoundedCornerShape(18.dp)
+            )
+            .padding(horizontal = 5.dp, vertical = 4.dp)
+    ) {
+        Text(text = item, color = Color.White)
+    }
 }

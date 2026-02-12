@@ -1,12 +1,15 @@
 package com.ghn.composelistkit.ui.nav
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.composable
 
 /**
  * @author 浩楠
@@ -27,9 +30,18 @@ fun AutoNavHost(
     startDestination: String = "ui/list",
     listScreen: @Composable (NavController, List<String>) -> Unit
 ) {
-    NavHost(navController = navController, startDestination = startDestination) {
+    val titles = remember(routeMap) { routeMap.keys.toList() }
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+        modifier = Modifier.fillMaxSize(),
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
+    ) {
         composable(startDestination) {
-            listScreen(navController, routeMap.keys.toList())
+            listScreen(navController, titles)
         }
 
         routeMap.forEach { (title, screen) ->
